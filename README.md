@@ -1,4 +1,4 @@
-# Climate-Change-according-to-Twitter-A-Network-Analysis
+# Climate Change Perception according to Twitter: A Network Analysis
 
 Authors
 
