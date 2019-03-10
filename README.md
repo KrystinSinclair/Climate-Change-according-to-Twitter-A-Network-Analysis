@@ -1,6 +1,7 @@
 # Climate-Change-according-to-Twitter-A-Network-Analysis
 
 Authors
+
 Jessica Fogerty: Data Science
 Krystin Sinclair: Data Science
 Hao Wang: Physics
