@@ -1,0 +1,39 @@
+---
+title: "test of proportions"
+author: "Krystin sinclair"
+date: "March 21, 2019"
+output: html_document
+---
+
+We want to test if the proportion of reliable news links in global warming tweets is different from that of climate change tweets. 
+
+The proportion of reliable news links in global warming tweets is .92.
+The proportion of reliable news links in climate change tweets is .98. 
+
+We can use a one sample z test for a proportion. 
+
+The population parameter of interest is population proportion of tweets who use term global warming that spread reliable news. 
+
+The significant level is .05. 
+
+Assumption are met. These tweets are a random sample and the sample size is sufficently large enough. 
+
+The null hypothesis is that the true population proprotion for global warming tweet on reliable sources is .98. 
+
+The null hypothesis is that it is less than .98
+
+
+N= total number of tweet URLS with keyword global warming = 353
+
+proportion of sample = .92
+(326 observations of reliable sources)
+
+population proportion under null hypothesis = .98
+
+
+```{r onesampleztestofproportions}
+result <- prop.test(326, 353, .98, alternative = "less", correct = FALSE)
+ #print result
+result
+```
+
