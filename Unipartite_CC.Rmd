@@ -1,0 +1,245 @@
+---
+title: "One-mode_GWarming"
+author: "Om K Jha"
+date: "March 23, 2019"
+output: html_document
+---
+
+## ** The Unipartite Structure of the Source/Target **
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo = TRUE}
+
+library(igraph)
+# install.packages("threejs") # for interactive network visualisations
+library(threejs)
+```
+
+
+```{r, echo = TRUE}
+library(igraph)
+# install.packages("threejs") # for interactive network visualisations
+library(threejs)
+df <- data.frame(read.csv("CC_EDGES.csv", header = TRUE))
+str(df)
+head(df)
+df <- droplevels(df)
+rownames(df) <- NULL
+
+df$Target <- as.numeric(df$Target)
+str(df)
+df
+library(tnet)
+b <- graph.data.frame(df, directed=FALSE, vertices = NULL)
+bipartite.mapping(b)
+# adding the type attribute to the network
+
+V(b)$type <- bipartite_mapping(b)$type 
+
+#now projecting onto two nodes
+
+P <- bipartite.projection(b, multiplicity = TRUE)
+P
+
+source <- P$proj1
+target <- P$proj2
+
+## The Network Metrics
+
+
+
+#1. Density
+
+#Density is the proportion of edges that exist as a fraction of the total #possible edges. It is known that the real world complex networks have low #density, the density for our networks are given by,
+
+```
+
+
+```{r, echo = TRUE, results = "hide"}
+
+library(tnet)
+
+b <- graph.data.frame(df, directed=FALSE, vertices = NULL)
+bipartite.mapping(b)
+
+# adding the type attribute to the network
+
+V(b)$type <- bipartite_mapping(b)$type 
+
+
+```
+
+Now projecting onto the two nodes
+
+```{r, echo = TRUE}
+
+P <- bipartite.projection(b, multiplicity = TRUE)
+P
+
+source <- P$proj1
+target <- P$proj2
+
+```
+
+## The Network Metrics
+
+> block quote
+
+1. Density
+
+Density is the proportion of edges that exist as a fraction of the total possible edges. It is known that the real world complex networks have low density, the density for our networks are given by,
+
+```{r, echo = TRUE}
+(den <- edge_density(source, loops = F))
+edge_density(target, loops = F)
+```
+
+The density indeed is very low for our network. Since the density of the target network is so low, analysing it would not offer any meaningful predictions. Thus, we analyse the source projection. 
+
+2. Transitivity
+
+Another important property of real world networks is the transitivity which is a measure of clustering. It has been obseved that the real world complex networks have high clustering. 
+
+```{r, echo = TRUE}
+
+(clus <- transitivity(source, type="global"))
+```
+
+Thus almost 90 percent of the connected triplets form a triangle. This is a very high clustering, typical of social networks.  
+
+3. Diameter
+
+```{r, echo = TRUE}
+
+diameter(source) # the longest path between any two nodes
+
+```
+
+
+```{r, echo = TRUE}
+
+Degree<- degree(source)
+
+# To generate a plot
+# vcol <- rep("gray40", vcount(source))
+# diam <- get_diameter(source, directed=F)
+# vcol[diam] <- "black"
+# ecol <- rep("gray80", ecount(source))
+# ecol[E(source, path=diam)] <- "orange" 
+# E(net, path=diam) finds edges along a path, here 'diam'
+# plot(source, vertex.color=vcol, edge.color=ecol, edge.arrow.mode=0)
+
+
+
+# For interactive visualisation using threejs
+
+
+plot_1 <- set_vertex_attr(source, "color", value = "dodgerblue")
+graphjs(plot_1, vertex.size = 0.4)
+
+
+```
+
+
+```{r, echo = TRUE}
+
+hist(Degree, xlim=c(0,50), breaks=1:vcount(source)-1, main="Degree of Source")
+
+```
+
+
+
+```{r, echo = TRUE}
+
+get_diameter(source) 
+farthest_vertices(source)
+
+```
+
+
+Now we compare the mean path length with that of the random graphs. 
+
+
+```{r, echo = TRUE}
+
+(md <- mean_distance(source))
+
+random <- vector('list', 1000)
+  
+for(i in 1:1000){
+  random[[i]] <- erdos.renyi.game(n = gorder(source), p.or.m = den, type = "gnp")
+}
+
+# Calculate average path length of 1000 random graphs
+
+md_random <- unlist(lapply(random, mean_distance, directed = FALSE))
+
+# Plot the distribution of average path lengths
+hist(md_random, xlim = range(c(2.8, 3.5)))
+abline(v = md, col = "red", lty = 3, lwd = 2)
+
+# Calculate the proportion of graphs with an average path length lower than our observed
+mean(md_random < md)
+```
+
+Thus, the results show the network has a very large path length which is unusual for a social network. 
+
+
+Now we try to visualise the network according to the community they belong to. 
+
+
+```{r, echo = TRUE}
+
+# Create an object 'i' containin the memberships of the fast-greedy community detection
+
+C = fastgreedy.community(source)
+i <-  membership(C)
+
+# Check the number of different communities
+sizes(C)
+
+# Add a color attribute to each vertex, setting the vertex color based on community membership
+
+gs <- set_vertex_attr(source, "color", value = colorRampPalette(c("blue", "red"))( 100) [i])
+
+# Plot the graph using threejs
+graphjs(gs, vertex.size = 0.3)
+
+```
+
+
+
+
+```{r, echo = TRUE}
+
+# cliques(source)  - gives cliques or complete subgraphs
+# sapply(cliques(source), length)
+
+largest_cliques(source)
+```
+
+The largest clique or the subgraph consists of 8 nodes as shown in the result above.
+
+```{r, echo = TRUE}
+
+hs <- hub_score(source, weights=NA)$vector
+as <- authority_score(source, weights=NA)$vector
+
+par(mfrow=c(1,2))
+
+
+plot_2 <- set_vertex_attr(source, "vertex.size",  value = hs*0.01 )
+plot_3 <- set_vertex_attr(source, "vertex.size", value= as*0.01 )
+ 
+graphjs(plot_2, vertex.color = "red" , main="Hubs")
+graphjs(plot_3, vertex.color = "green" , main="Authorities")
+
+```
+
+Thus, in conclusion the network has small density and high clustering expected but the mean distance is unusually high which is not typical of social networks.The largest clique or subgraph only has 8 nodes and the communities are not well deifned.  
+
